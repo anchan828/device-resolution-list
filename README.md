@@ -1,0 +1,2 @@
+device-resolution-list
+======================
