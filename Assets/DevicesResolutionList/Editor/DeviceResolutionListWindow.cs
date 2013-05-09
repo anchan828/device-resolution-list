@@ -4,6 +4,7 @@ using UnityEditor;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System;
 
 namespace DeviceResolusionList
 {
@@ -13,15 +14,17 @@ namespace DeviceResolusionList
 		private const string assetName = "DevicesResolutionList";
 		private Vector2 scroll = new Vector2 ();
 		private bool guiVisible = false;
+		private bool[] sorts = new bool[6];
 		private static DeviceResolutionListWindow _window;
-		private static DeviceResolutionListWindow window{
-			get{
-				if(_window == null){
+
+		private static DeviceResolutionListWindow window {
+			get {
+				if (_window == null) {
 					_window = GetWindow<DeviceResolutionListWindow> ();
 				}
 				return _window;
 			}
-			set{
+			set {
 				_window = value;	
 			}
 		}
@@ -52,7 +55,7 @@ namespace DeviceResolusionList
 		private static GUIStyle titleStyle {
 			get {
 				if (_titleStyle == null) {
-					_titleStyle = new GUIStyle (EditorStyles.boldLabel);
+					_titleStyle = new GUIStyle (EditorStyles.toolbarButton);
 					_titleStyle.alignment = TextAnchor.MiddleCenter;
 				}
 			
@@ -129,20 +132,60 @@ namespace DeviceResolusionList
 			EditorGUILayout.EndHorizontal ();
 		
 		}
-	
+
 		void DrawTitle ()
 		{
-			EditorGUILayout.BeginHorizontal ();
-			GUILayout.Space (15);
-			GUILayout.Label ("キャリア", titleStyle, GUILayout.Width (60));
-			GUILayout.Label ("メーカー", titleStyle, GUILayout.Width (100));
-			GUILayout.Label ("端末名", titleStyle, GUILayout.Width (200));
-			GUILayout.Label ("横", titleStyle, GUILayout.Width (40));
-			GUILayout.Label ("縦", titleStyle, GUILayout.Width (40));
-			GUILayout.Label ("発売日", titleStyle, GUILayout.Width (70));
+			EditorGUILayout.BeginHorizontal (EditorStyles.toolbarButton);
+			GUILayout.Label ("", GUILayout.Width (10));
+			ToolbarButton (string.Format ("キャリア {0}", sorts [0] ? "▲" : "▼"), 65, () => {
+				devices.Sort ((x, y) => {
+					return sorts [0] ? string.Compare (x.career, y.career) : string.Compare (y.career, x.career);
+				});
+				sorts [0] = !sorts [0];
+			});
+			ToolbarButton (string.Format ("メーカー {0}", sorts [1] ? "▲" : "▼"), 105, () => {
+				devices.Sort ((x, y) => {
+					return sorts [1] ? string.Compare (x.maker, y.maker) : string.Compare (y.maker, x.maker);
+				});
+				sorts [1] = !sorts [1];
+			});
+			ToolbarButton (string.Format ("端末名 {0}", sorts [2] ? "▲" : "▼"), 210, () => {
+
+				devices.Sort ((x, y) => {
+					return sorts [2] ? string.Compare (x.deviceName, y.deviceName) : string.Compare (y.deviceName, x.deviceName);
+				});
+				sorts [2] = !sorts [2];
+			});
+
+			ToolbarButton (string.Format ("横 {0}", sorts [3] ? "▲" : "▼"), 40, () => {
+				devices.Sort ((x, y) => {
+					return sorts [3] ? x.width - y.width : y.width - x.width;
+				});
+				sorts [3] = !sorts [3];
+			});
+
+			ToolbarButton (string.Format ("縦 {0}", sorts [4] ? "▲" : "▼"), 40, () => {
+				devices.Sort ((x, y) => {
+					return sorts [4] ? x.height - y.height : y.height - x.height;
+				});
+				sorts [4] = !sorts [4];
+			});
+			ToolbarButton (string.Format ("発売日 {0}", sorts [5] ? "▲" : "▼"), 75, () => {
+				devices.Sort ((x, y) => {
+					return sorts [5] ? string.Compare (x.releaseDate, y.releaseDate) : string.Compare (y.releaseDate, x.releaseDate);
+				});
+				sorts [5] = !sorts [5];
+			});
 			EditorGUILayout.EndHorizontal ();
 		}
-	
+
+		void ToolbarButton (string label, int width, Action action)
+		{
+			if (GUILayout.Button (label, titleStyle, GUILayout.Width (width))) {
+				action ();
+			}
+		}
+
 		static void DrawDevice (DeviceResolution device)
 		{
 			if (device == null) {
@@ -153,8 +196,10 @@ namespace DeviceResolusionList
 			GUILayout.Label (device.career, deviceStyle, GUILayout.Width (60));
 			GUILayout.Label (device.maker, deviceStyle, GUILayout.Width (100));
 			GUILayout.Label (device.deviceName, deviceStyle, GUILayout.Width (200));
+			deviceStyle.alignment = TextAnchor.MiddleRight;
 			GUILayout.Label (device.width.ToString (), deviceStyle, GUILayout.Width (40));
 			GUILayout.Label (device.height.ToString (), deviceStyle, GUILayout.Width (40));
+			deviceStyle.alignment = TextAnchor.MiddleLeft;
 			GUILayout.Label (device.releaseDate, deviceStyle, GUILayout.Width (70));
 			EditorGUILayout.EndHorizontal ();
 		}
